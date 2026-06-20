@@ -766,34 +766,28 @@
             }
 
             try {
-                const proxyUrls = [
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent('http://api.huiniao.top/interface/home/lotteryHistory?type=ssq&code=' + item.period + '&limit=1')}`,
-                    `https://corsproxy.io/?${encodeURIComponent('http://api.huiniao.top/interface/home/lotteryHistory?type=ssq&code=' + item.period + '&limit=1')}`
-                ];
+                const apiUrl = `https://cn.apihz.cn/api/caipiao/shuangseqiu.php?id=88888888&key=88888888&qh=${item.period}`;
 
-                let data = null;
-                for (const url of proxyUrls) {
-                    try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 8000);
-                        const response = await fetch(url, {
-                            method: 'GET',
-                            signal: controller.signal,
-                            headers: { 'Accept': 'application/json' }
-                        });
-                        clearTimeout(timeoutId);
-                        if (!response.ok) continue;
-                        const json = await response.json();
-                        if (json.code === 1 && json.data && json.data.data && json.data.data.list && json.data.data.list.length > 0) {
-                            data = json.data.data.list[0];
-                            break;
-                        }
-                    } catch (e) {
-                        continue;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/json' }
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    showToast('查询服务暂时不可用');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '查奖';
                     }
+                    return;
                 }
 
-                if (!data) {
+                const json = await response.json();
+                if (json.code !== 200 || !json.number) {
                     showToast('未找到第 ' + item.period + ' 期开奖数据');
                     if (btn) {
                         btn.disabled = false;
@@ -802,8 +796,9 @@
                     return;
                 }
 
-                const winningReds = [parseInt(data.one), parseInt(data.two), parseInt(data.three), parseInt(data.four), parseInt(data.five), parseInt(data.six)];
-                const winningBlue = parseInt(data.seven);
+                const parts = json.number.split('|');
+                const winningReds = parts.slice(0, 6).map(n => parseInt(n));
+                const winningBlue = parseInt(parts[6]);
 
                 const redMatch = item.red.filter(r => winningReds.includes(r)).length;
                 const blueMatch = item.blue === winningBlue ? 1 : 0;
