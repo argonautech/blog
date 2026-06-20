@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>双色球助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ededed;
+            --surface: #ffffff;
+            --primary: #07c160;
+            --primary-light: #e6f7ed;
+            --primary-dark: #06ad56;
+            --accent: #576b95;
+            --accent-light: #ebedf5;
+            --text-primary: #111111;
+            --text-secondary: #333333;
+            --text-muted: #b2b2b2;
+            --border: #e5e5e5;
+            --border-light: #f5f5f5;
+            --success: #07c160;
+            --success-bg: #e6f7ed;
+            --warning: #fa5151;
+            --warning-bg: #ffe6e6;
+            --link: #576b95;
+            --shadow: 0 1px 3px rgba(0,0,0,0.04);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            height: 100%;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--bg);
+            position: relative;
+        }
+
+        /* WeChat-style Tab Bar */
+        .tab-bar {
+            display: flex;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 6px 0 8px;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .tab-btn .tab-icon {
+            width: 24px;
+            height: 24px;
+            line-height: 1;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-btn .tab-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 0 70px;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* WeChat cells */
+        .cells {
+            background: var(--surface);
+            margin-top: 8px;
+        }
+
+        .cells::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: var(--border);
+            transform: scaleY(0.5);
+            transform-origin: 0 0;
+        }
+
+        .cells::after {
+            content: '';
+            display: block;
+            height: 1px;
+            background: var(--border);
+            transform: scaleY(0.5);
+            transform-origin: 0 0;
+        }
+
+        .cell {
+            padding: 14px 16px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .cell::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 16px;
+            right: 0;
+            height: 1px;
+            background: var(--border);
+            transform: scaleY(0.5);
+            transform-origin: 0 100%;
+        }
+
+        .cell:last-child::after { display: none; }
+
+        .cell-bd { flex: 1; }
+        .cell-ft { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* WeChat button style (primary action) */
+        .btn-primary {
+            display: block;
+            width: calc(100% - 32px);
+            margin: 24px 16px;
+            padding: 12px 0;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:active { background: var(--primary-dark); }
+
+        .btn-secondary {
+            display: block;
+            width: calc(100% - 32px);
+            margin: 0 16px 16px;
+            padding: 12px 0;
+            background: var(--surface);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-secondary:active { background: var(--primary-light); }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--link);
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .btn-text:active { opacity: 0.6; }
+
+        /* Balls */
+        .balls-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 24px 16px;
+            min-height: 80px;
+            align-items: center;
+        }
+
+        .ball {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Noto Sans SC', sans-serif;
+            transition: transform 0.15s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+
+        .ball.red {
+            background: linear-gradient(135deg, #ff4444, #e53935);
+            color: white;
+        }
+
+        .ball.blue {
+            background: linear-gradient(135deg, #448aff, #2979ff);
+            color: white;
+        }
+
+        .ball.animate-in {
+            animation: ballPop 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        @keyframes ballPop {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input */
+        .input-row {
+            display: flex;
+            gap: 0;
+            align-items: stretch;
+            padding: 0 16px 16px;
+        }
+
+        .input-field {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-right: none;
+            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+            padding: 12px 14px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .input-field:focus { border-color: var(--primary); }
+
+        .input-field::placeholder { color: var(--text-muted); font-size: 0.85rem; }
+
+        .input-btn {
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .input-btn:active { background: var(--primary-dark); }
+
+        /* Saved Items - WeChat list style */
+        .saved-list { padding: 8px 0; }
+
+        .saved-item {
+            background: var(--surface);
+            margin-bottom: 8px;
+            position: relative;
+            padding: 12px 16px;
+        }
+
+        .saved-item::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: var(--border);
+            transform: scaleY(0.5);
+            transform-origin: 0 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .saved-item::after {
+            content: '';
+            display: block;
+            height: 1px;
+            background: var(--border);
+            transform: scaleY(0.5);
+            transform-origin: 0 0;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .saved-item .period-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding-right: 28px;
+        }
+
+        .saved-item .period {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .saved-item .date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .saved-item .balls-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .saved-item .ball-small {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+
+        .saved-item .ball-small.red {
+            background: linear-gradient(135deg, #ff4444, #e53935);
+            color: white;
+        }
+
+        .saved-item .ball-small.blue {
+            background: linear-gradient(135deg, #448aff, #2979ff);
+            color: white;
+        }
+
+        .btn-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            z-index: 2;
+        }
+
+        .btn-close:active { color: var(--warning); }
+
+        .btn-check {
+            display: inline-block;
+            padding: 8px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+            transition: all 0.15s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-check:active { background: var(--primary-dark); }
+
+        .btn-check:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Result inline */
+        .result-inline {
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .result-inline.show { display: block; }
+
+        .result-inline.win {
+            background: var(--success-bg);
+            border: 1px solid rgba(7,193,96,0.15);
+        }
+
+        .result-inline.lose {
+            background: var(--border-light);
+            border: 1px solid var(--border);
+        }
+
+        .result-inline .result-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .result-inline.win .result-title { color: var(--success); }
+        .result-inline.lose .result-title { color: var(--text-muted); }
+
+        .result-inline .result-detail {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .result-inline .prize-name {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        .empty-state div:last-child {
+            font-size: 0.85rem;
+        }
+
+        /* WeChat Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
+        }
+
+        .toast.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* WeChat section title */
+        .section-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 16px 16px 8px;
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="content-area">
+            <!-- Tab 1: 随机生成 -->
+            <div class="tab-panel active" id="tab-generate">
+                <div class="section-title">生成双色球号码</div>
+                <div class="cells">
+                    <div class="cell" style="padding: 20px 16px;">
+                        <div class="cell-bd">
+                            <div class="balls-container" id="generatedBalls" style="padding: 0; min-height: 60px;">
+                                <div class="empty-state" style="padding: 20px;">
+                                    <div class="icon">🎲</div>
+                                    <div>点击按钮生成随机号码</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-row" id="saveGroup" style="display: none; margin-top: 8px;">
+                    <input type="text" class="input-field" id="periodInput" placeholder="输入期数，如 2023150">
+                    <button class="input-btn" onclick="saveNumbers()">保存</button>
+                </div>
+
+                <button class="btn-primary" onclick="generateNumbers()">生成随机号码</button>
+                <button class="btn-secondary" onclick="clearGenerated()">清空</button>
+            </div>
+
+            <!-- Tab 2: 保存号码 -->
+            <div class="tab-panel" id="tab-saved">
+                <div class="saved-list" id="savedList">
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <div>暂无保存的号码</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WeChat-style bottom tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="generate" onclick="switchTab('generate')">
+                <span class="tab-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 12h8M12 8v8"/>
+                    </svg>
+                </span>
+                <span>随机生成</span>
+            </button>
+            <button class="tab-btn" data-tab="saved" onclick="switchTab('saved')">
+                <span class="tab-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                        <rect x="9" y="3" width="6" height="4" rx="1"/>
+                        <path d="M9 14l2 2 4-4"/>
+                    </svg>
+                </span>
+                <span>保存号码</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const STORAGE_KEY = 'shuangseqiu_numbers_v3';
+        let currentNumbers = null;
+        let currentTab = 'generate';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === 'tab-' + tab);
+            });
+            if (tab === 'saved') {
+                renderSavedList();
+            }
+        }
+
+        function getSavedNumbers() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveToStorage(numbers) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(numbers));
+        }
+
+        function generateNumbers() {
+            const reds = new Set();
+            while (reds.size < 6) {
+                reds.add(Math.floor(Math.random() * 33) + 1);
+            }
+            const redBalls = Array.from(reds).sort((a, b) => a - b);
+            const blueBall = Math.floor(Math.random() * 16) + 1;
+
+            currentNumbers = { red: redBalls, blue: blueBall };
+
+            const container = document.getElementById('generatedBalls');
+            container.innerHTML = '';
+            redBalls.forEach((num, index) => {
+                const ball = document.createElement('div');
+                ball.className = 'ball red animate-in';
+                ball.textContent = String(num).padStart(2, '0');
+                ball.style.animationDelay = `${index * 0.06}s`;
+                container.appendChild(ball);
+            });
+            const blueBallEl = document.createElement('div');
+            blueBallEl.className = 'ball blue animate-in';
+            blueBallEl.textContent = String(blueBall).padStart(2, '0');
+            blueBallEl.style.animationDelay = '0.36s';
+            container.appendChild(blueBallEl);
+
+            document.getElementById('saveGroup').style.display = 'flex';
+        }
+
+        function clearGenerated() {
+            currentNumbers = null;
+            document.getElementById('generatedBalls').innerHTML = `
+                <div class="empty-state" style="padding: 20px;">
+                    <div class="icon">🎲</div>
+                    <div>点击按钮生成随机号码</div>
+                </div>
+            `;
+            document.getElementById('saveGroup').style.display = 'none';
+            document.getElementById('periodInput').value = '';
+        }
+
+        function saveNumbers() {
+            if (!currentNumbers) {
+                showToast('请先生成号码');
+                return;
+            }
+            const period = document.getElementById('periodInput').value.trim();
+            if (!period) {
+                showToast('请输入开奖期数');
+                return;
+            }
+            const saved = getSavedNumbers();
+            const item = {
+                id: Date.now(),
+                period: period,
+                red: [...currentNumbers.red],
+                blue: currentNumbers.blue,
+                date: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+            };
+            saved.unshift(item);
+            saveToStorage(saved);
+            showToast('保存成功');
+            document.getElementById('periodInput').value = '';
+
+            setTimeout(() => switchTab('saved'), 400);
+        }
+
+        function deleteNumbers(id) {
+            let saved = getSavedNumbers();
+            saved = saved.filter(item => item.id !== id);
+            saveToStorage(saved);
+            renderSavedList();
+            showToast('已删除');
+        }
+
+        function renderSavedList() {
+            const container = document.getElementById('savedList');
+            const saved = getSavedNumbers();
+
+            if (saved.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <div>暂无保存的号码</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            saved.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'saved-item';
+                el.id = `item-${item.id}`;
+
+                const hasResult = item.result ? true : false;
+                const checkBtnHtml = hasResult ? '' : `<button class="btn-check" id="check-btn-${item.id}" onclick="event.stopPropagation(); checkPrize(${item.id})">查奖</button>`;
+
+                el.innerHTML = `
+                    <button class="btn-close" onclick="event.stopPropagation(); deleteNumbers(${item.id})" title="删除">&times;</button>
+                    <div class="period-row">
+                        <span class="period">第 ${item.period} 期</span>
+                        <span class="date">${item.date}</span>
+                    </div>
+                    <div class="balls-row">
+                        ${item.red.map(n => `<div class="ball-small red">${String(n).padStart(2, '0')}</div>`).join('')}
+                        <div class="ball-small blue">${String(item.blue).padStart(2, '0')}</div>
+                    </div>
+                    ${checkBtnHtml}
+                    <div class="result-inline ${hasResult ? 'show' : ''} ${item.result && item.result.level > 0 ? 'win' : 'lose'}" id="result-${item.id}">
+                        <div class="result-title" id="result-title-${item.id}"></div>
+                        <div class="result-detail" id="result-detail-${item.id}"></div>
+                    </div>
+                `;
+                container.appendChild(el);
+
+                if (hasResult) {
+                    showResultInItem(item.id, item.result, item.resultRedMatch, item.resultBlueMatch, item.resultWinningNumbers);
+                }
+            });
+        }
+
+        async function checkPrize(id) {
+            const saved = getSavedNumbers();
+            const item = saved.find(s => s.id === id);
+            if (!item) {
+                showToast('记录不存在');
+                return;
+            }
+
+            const btn = document.getElementById(`check-btn-${id}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading-spinner"></span>查询中';
+            }
+
+            try {
+                const proxyUrls = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent('http://api.huiniao.top/interface/home/lotteryHistory?type=ssq&code=' + item.period + '&limit=1')}`,
+                    `https://corsproxy.io/?${encodeURIComponent('http://api.huiniao.top/interface/home/lotteryHistory?type=ssq&code=' + item.period + '&limit=1')}`
+                ];
+
+                let data = null;
+                for (const url of proxyUrls) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 8000);
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            signal: controller.signal,
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        clearTimeout(timeoutId);
+                        if (!response.ok) continue;
+                        const json = await response.json();
+                        if (json.code === 1 && json.data && json.data.data && json.data.data.list && json.data.data.list.length > 0) {
+                            data = json.data.data.list[0];
+                            break;
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+
+                if (!data) {
+                    showToast('未找到第 ' + item.period + ' 期开奖数据');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '查奖';
+                    }
+                    return;
+                }
+
+                const winningReds = [parseInt(data.one), parseInt(data.two), parseInt(data.three), parseInt(data.four), parseInt(data.five), parseInt(data.six)];
+                const winningBlue = parseInt(data.seven);
+
+                const redMatch = item.red.filter(r => winningReds.includes(r)).length;
+                const blueMatch = item.blue === winningBlue ? 1 : 0;
+
+                const result = calculatePrize(redMatch, blueMatch);
+                const winningNumbers = { red: winningReds, blue: winningBlue };
+
+                item.result = result;
+                item.resultRedMatch = redMatch;
+                item.resultBlueMatch = blueMatch;
+                item.resultWinningNumbers = winningNumbers;
+                saveToStorage(saved);
+
+                renderSavedList();
+                showToast(`第 ${item.period} 期：${result.name}`);
+
+            } catch (error) {
+                showToast('查询失败：' + (error.message || '网络错误'));
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '查奖';
+                }
+            }
+        }
+
+        function calculatePrize(redMatch, blueMatch) {
+            if (redMatch === 6 && blueMatch === 1) return { level: 1, name: '一等奖', desc: '6红+1蓝' };
+            if (redMatch === 6 && blueMatch === 0) return { level: 2, name: '二等奖', desc: '6红+0蓝' };
+            if (redMatch === 5 && blueMatch === 1) return { level: 3, name: '三等奖', desc: '5红+1蓝' };
+            if ((redMatch === 5 && blueMatch === 0) || (redMatch === 4 && blueMatch === 1)) return { level: 4, name: '四等奖', desc: redMatch === 5 ? '5红+0蓝' : '4红+1蓝' };
+            if ((redMatch === 4 && blueMatch === 0) || (redMatch === 3 && blueMatch === 1)) return { level: 5, name: '五等奖', desc: redMatch === 4 ? '4红+0蓝' : '3红+1蓝' };
+            if ((redMatch === 2 && blueMatch === 1) || (redMatch === 1 && blueMatch === 1) || (redMatch === 0 && blueMatch === 1)) return { level: 6, name: '六等奖', desc: blueMatch === 1 ? '中蓝球' : '' };
+            return { level: 0, name: '未中奖', desc: '' };
+        }
+
+        function showResultInItem(id, result, redMatch, blueMatch, winningNumbers) {
+            const panel = document.getElementById(`result-${id}`);
+            const title = document.getElementById(`result-title-${id}`);
+            const detail = document.getElementById(`result-detail-${id}`);
+            if (!panel || !title || !detail) return;
+
+            panel.className = 'result-inline show ' + (result.level > 0 ? 'win' : 'lose');
+
+            if (result.level > 0) {
+                title.innerHTML = `🎉 恭喜！<span class="prize-name">${result.name}</span>`;
+            } else {
+                title.textContent = '未中奖';
+            }
+
+            const winningNums = winningNumbers.red.map(n => String(n).padStart(2, '0')).join(' ');
+            detail.innerHTML = `开奖：${winningNums} + ${String(winningNumbers.blue).padStart(2, '0')} | 匹配红球 <strong>${redMatch}</strong> 个，蓝球 <strong>${blueMatch}</strong> 个`;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSavedList();
+        });
+    </script>
+</body>
+</html>
