@@ -719,7 +719,7 @@
                 </div>
 
                 <div class="input-row" id="saveGroup" style="display: none; margin-top: 8px;">
-                    <input type="text" class="input-field" id="periodInput" placeholder="输入期数，如 2023150">
+                    <input type="number" inputmode="numeric" pattern="[0-9]*" class="input-field" id="periodInput" placeholder="输入期数，如 2023150">
                     <button class="input-btn" onclick="saveNumbers()">保存</button>
                 </div>
 
@@ -774,14 +774,14 @@
         <div class="modal-content">
             <div class="modal-title">输入开奖号码</div>
             <div class="modal-inputs">
-                <input type="text" class="modal-input red-input" id="m1" maxlength="2" placeholder="" oninput="onManualInput(this, 'm2')">
-                <input type="text" class="modal-input red-input" id="m2" maxlength="2" placeholder="" oninput="onManualInput(this, 'm3')">
-                <input type="text" class="modal-input red-input" id="m3" maxlength="2" placeholder="" oninput="onManualInput(this, 'm4')">
-                <input type="text" class="modal-input red-input" id="m4" maxlength="2" placeholder="" oninput="onManualInput(this, 'm5')">
-                <input type="text" class="modal-input red-input" id="m5" maxlength="2" placeholder="" oninput="onManualInput(this, 'm6')">
-                <input type="text" class="modal-input red-input" id="m6" maxlength="2" placeholder="" oninput="onManualInput(this, 'm7')">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="modal-input red-input" id="m1" maxlength="2" placeholder="" oninput="onManualInput(this, 'm2')">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="modal-input red-input" id="m2" maxlength="2" placeholder="" oninput="onManualInput(this, 'm3')">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="modal-input red-input" id="m3" maxlength="2" placeholder="" oninput="onManualInput(this, 'm4')">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="modal-input red-input" id="m4" maxlength="2" placeholder="" oninput="onManualInput(this, 'm5')">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="modal-input red-input" id="m5" maxlength="2" placeholder="" oninput="onManualInput(this, 'm6')">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="modal-input red-input" id="m6" maxlength="2" placeholder="" oninput="onManualInput(this, 'm7')">
                 <span class="modal-inputs-sep">+</span>
-                <input type="text" class="modal-input blue-input" id="m7" maxlength="2" placeholder="" oninput="onManualInput(this, null)">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="modal-input blue-input" id="m7" maxlength="2" placeholder="" oninput="onManualInput(this, null)">
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" id="manualConfirmBtn" onclick="confirmManualCheck()" disabled>确认</button>
