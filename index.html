@@ -242,6 +242,7 @@
             font-family: 'Noto Sans SC', sans-serif;
             transition: transform 0.15s ease;
             box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            cursor: pointer;
         }
 
         .ball.red {
@@ -513,38 +514,45 @@
             font-size: 0.85rem;
         }
 
-        .next-draw-info {
+        .draw-info-card {
             text-align: center;
+            padding: 12px 0;
         }
 
-        .next-draw-label {
+        .draw-info-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 0;
+        }
+
+        .draw-info-row + .draw-info-row {
+            border-top: 1px solid var(--border-light);
+        }
+
+        .draw-info-label {
             font-size: 0.75rem;
             color: var(--text-muted);
-            margin-bottom: 6px;
-            letter-spacing: 1px;
+            white-space: nowrap;
+            min-width: 56px;
         }
 
-        .next-draw-time {
-            font-size: 1.6rem;
-            font-weight: 700;
+        .draw-info-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .draw-info-value.primary {
             color: var(--primary);
-            margin-bottom: 4px;
-            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 1rem;
         }
 
-        .next-draw-date {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .next-draw-deadline {
+        .draw-info-sub {
             font-size: 0.7rem;
-            color: var(--warning);
-            background: var(--warning-bg);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            display: inline-block;
+            color: var(--text-muted);
+            margin-left: 2px;
         }
 
         /* WeChat Toast */
@@ -706,11 +714,15 @@
                         <div class="cell-bd">
                             <div class="balls-container" id="generatedBalls" style="padding: 0; min-height: 60px;">
                                 <div class="empty-state" style="padding: 20px;">
-                                    <div class="next-draw-info">
-                                        <div class="next-draw-label">下一次开奖</div>
-                                        <div class="next-draw-time" id="nextDrawTime">--</div>
-                                        <div class="next-draw-date" id="nextDrawDate">--</div>
-                                        <div class="next-draw-deadline" id="nextDrawDeadline">--</div>
+                                    <div class="draw-info-card">
+                                        <div class="draw-info-row">
+                                            <span class="draw-info-value" id="currentTime" style="font-size: 0.85rem; color: var(--text-muted);">--</span>
+                                        </div>
+                                        <div class="draw-info-row">
+                                            <span class="draw-info-label">下次开奖</span>
+                                            <span class="draw-info-value primary" id="nextDrawTime">--</span>
+                                            <span class="draw-info-sub" id="nextDrawDate">--</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -838,14 +850,35 @@
                 ball.className = 'ball red animate-in';
                 ball.textContent = String(num).padStart(2, '0');
                 ball.style.animationDelay = `${index * 0.06}s`;
+                ball.onclick = () => openEditBallModal();
                 container.appendChild(ball);
             });
             const blueBallEl = document.createElement('div');
             blueBallEl.className = 'ball blue animate-in';
             blueBallEl.textContent = String(blueBall).padStart(2, '0');
             blueBallEl.style.animationDelay = '0.36s';
+            blueBallEl.onclick = () => openEditBallModal();
             container.appendChild(blueBallEl);
 
+            document.getElementById('saveGroup').style.display = 'flex';
+        }
+
+        function generateNumbers_redraw() {
+            if (!currentNumbers) return;
+            const container = document.getElementById('generatedBalls');
+            container.innerHTML = '';
+            currentNumbers.red.forEach((num) => {
+                const ball = document.createElement('div');
+                ball.className = 'ball red';
+                ball.textContent = String(num).padStart(2, '0');
+                ball.onclick = () => openEditBallModal();
+                container.appendChild(ball);
+            });
+            const blueBallEl = document.createElement('div');
+            blueBallEl.className = 'ball blue';
+            blueBallEl.textContent = String(currentNumbers.blue).padStart(2, '0');
+            blueBallEl.onclick = () => openEditBallModal();
+            container.appendChild(blueBallEl);
             document.getElementById('saveGroup').style.display = 'flex';
         }
 
@@ -853,11 +886,15 @@
             currentNumbers = null;
             document.getElementById('generatedBalls').innerHTML = `
                 <div class="empty-state" style="padding: 20px;">
-                    <div class="next-draw-info">
-                        <div class="next-draw-label">下一次开奖</div>
-                        <div class="next-draw-time" id="nextDrawTime">--</div>
-                        <div class="next-draw-date" id="nextDrawDate">--</div>
-                        <div class="next-draw-deadline" id="nextDrawDeadline">--</div>
+                    <div class="draw-info-card">
+                        <div class="draw-info-row">
+                            <span class="draw-info-value" id="currentTime" style="font-size: 0.85rem; color: var(--text-muted);">--</span>
+                        </div>
+                        <div class="draw-info-row">
+                            <span class="draw-info-label">下次开奖</span>
+                            <span class="draw-info-value primary" id="nextDrawTime">--</span>
+                            <span class="draw-info-sub" id="nextDrawDate">--</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1066,10 +1103,27 @@
 
         let manualCheckId = null;
         let manualCheckEditMode = false;
+        let isBallEditMode = false;
+
+        function openEditBallModal() {
+            if (!currentNumbers) return;
+            isBallEditMode = true;
+            manualCheckId = null;
+            manualCheckEditMode = false;
+            document.querySelector('.modal-title').textContent = '修正号码';
+            document.getElementById('manualModal').classList.add('show');
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('m' + i).value = String(currentNumbers.red[i - 1]).padStart(2, '0');
+            }
+            document.getElementById('m7').value = String(currentNumbers.blue).padStart(2, '0');
+            checkManualFormValid();
+        }
 
         function openManualModal(id, isEdit = false) {
+            isBallEditMode = false;
             manualCheckId = id;
             manualCheckEditMode = isEdit;
+            document.querySelector('.modal-title').textContent = '输入开奖号码';
             document.getElementById('manualModal').classList.add('show');
 
             const saved = getSavedNumbers();
@@ -1170,24 +1224,32 @@
         }
 
         function confirmManualCheck() {
-            if (!manualCheckId) return;
-
-            const winningReds = [];
+            const newReds = [];
             for (let i = 1; i <= 6; i++) {
                 const val = parseInt(document.getElementById('m' + i).value);
                 if (!val || val < 1 || val > 33) {
                     showToast('请填写完整的红球号码（01-33）');
                     return;
                 }
-                winningReds.push(val);
+                newReds.push(val);
             }
-            winningReds.sort((a, b) => a - b);
+            newReds.sort((a, b) => a - b);
 
-            const winningBlue = parseInt(document.getElementById('m7').value);
-            if (!winningBlue || winningBlue < 1 || winningBlue > 16) {
+            const newBlue = parseInt(document.getElementById('m7').value);
+            if (!newBlue || newBlue < 1 || newBlue > 16) {
                 showToast('请填写蓝球号码（01-16）');
                 return;
             }
+
+            if (isBallEditMode) {
+                currentNumbers = { red: newReds, blue: newBlue };
+                closeManualModal();
+                generateNumbers_redraw();
+                showToast('号码已修正');
+                return;
+            }
+
+            if (!manualCheckId) return;
 
             const saved = getSavedNumbers();
             const item = saved.find(s => s.id === manualCheckId);
@@ -1196,11 +1258,11 @@
                 return;
             }
 
-            const redMatch = item.red.filter(r => winningReds.includes(r)).length;
-            const blueMatch = item.blue === winningBlue ? 1 : 0;
+            const redMatch = item.red.filter(r => newReds.includes(r)).length;
+            const blueMatch = item.blue === newBlue ? 1 : 0;
 
             const result = calculatePrize(redMatch, blueMatch);
-            const winningNumbers = { red: winningReds, blue: winningBlue };
+            const winningNumbers = { red: newReds, blue: newBlue };
 
             item.result = result;
             item.resultRedMatch = redMatch;
@@ -1227,6 +1289,11 @@
             const hour = now.getHours();
             const minute = now.getMinutes();
 
+            const currentEl = document.getElementById('currentTime');
+            if (currentEl) {
+                currentEl.textContent = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            }
+
             let nextDraw = new Date(now);
             nextDraw.setHours(21, 15, 0, 0);
 
@@ -1250,21 +1317,16 @@
             const dateStr = `${nextDraw.getMonth() + 1}月${nextDraw.getDate()}日 ${days[nextDraw.getDay()]}`;
             const timeStr = '21:15';
 
-            const deadline = new Date(nextDraw);
-            deadline.setMinutes(deadline.getMinutes() - 15);
-            const deadlineStr = `购买截止 ${String(deadline.getHours()).padStart(2, '0')}:${String(deadline.getMinutes()).padStart(2, '0')}`;
-
             const timeEl = document.getElementById('nextDrawTime');
             const dateEl = document.getElementById('nextDrawDate');
-            const deadlineEl = document.getElementById('nextDrawDeadline');
             if (timeEl) timeEl.textContent = timeStr;
             if (dateEl) dateEl.textContent = dateStr;
-            if (deadlineEl) deadlineEl.textContent = deadlineStr;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             renderSavedList();
             updateNextDrawTime();
+            setInterval(updateNextDrawTime, 1000);
         });
     </script>
 </body>
